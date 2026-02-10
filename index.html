@@ -1,10 +1,828 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="it">
 <head>
-  <title>Il mio sito</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cinema Multisala</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1724;
+  --card:#0b1220;
+  --accent:#ff3b3b;
+  --muted:#94a3b8;
+  --seat:#203a3a;
+  --sold:#64748b;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  font-family:Inter,system-ui;
+  background:linear-gradient(180deg,var(--bg),#071021);
+  color:#e6eef6;
+}
+.app{display:none;height:100vh;flex-direction:column}
+.app.active{display:flex}
+header{background:#0a0f1a;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b;box-shadow:0 4px 12px #0006}
+.logo{font-size:24px;font-weight:700;color:var(--accent)}
+.header-right{display:flex;gap:15px;align-items:center}
+.user-info{font-size:14px;color:var(--muted)}
+input,button{border-radius:8px;border:none;padding:10px 15px;font-size:14px;font-family:inherit}
+input{background:#111827;color:#fff;min-width:250px}
+input::placeholder{color:#666}
+button{cursor:pointer;transition:all 0.2s}
+.btn{background:var(--accent);color:#fff;font-weight:600}
+.btn:hover{background:#ff1f1f;transform:translateY(-2px)}
+.btn-ghost{background:#111827;color:#aaa}
+.btn-ghost:hover{background:#1a2332;color:#fff}
+.btn-sm{padding:8px 12px;font-size:13px}
+main{flex:1;overflow-y:auto;padding:40px}
+.screen{display:none}
+.screen.active{display:block;animation:fadeIn 0.3s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* HOME SCREEN */
+.search-section{margin-bottom:40px}
+.search-section h2{margin:0 0 20px 0;font-size:18px;color:#e6eef6}
+.films-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:25px}
+.film-card{background:var(--card);border-radius:12px;overflow:hidden;cursor:pointer;transition:all 0.3s;border:2px solid transparent}
+.film-card:hover{transform:translateY(-8px);border-color:var(--accent);box-shadow:0 12px 30px #ff3b3b33}
+.film-poster{width:100%;height:250px;background-size:cover;background-position:center;position:relative}
+.film-info{padding:15px}
+.film-title{margin:0 0 10px 0;font-size:16px;font-weight:600}
+.film-price{color:var(--accent);font-weight:700;margin-bottom:10px}
+.times-list{display:flex;flex-wrap:wrap;gap:8px}
+.time-btn{background:#111827;padding:6px 10px;border-radius:6px;font-size:12px;border:none;color:#aaa;cursor:pointer;transition:all 0.2s}
+.time-btn:hover{background:var(--accent);color:#fff}
+
+/* SEATS SCREEN */
+.seats-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+.seats-header h2{margin:0;font-size:24px}
+.back-btn{background:#111827;color:#aaa;padding:10px 15px;border-radius:8px;border:none;cursor:pointer}
+.back-btn:hover{background:#1a2332;color:#fff}
+.seat-info{background:var(--card);padding:20px;border-radius:12px;margin-bottom:30px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.seat-detail{display:flex;gap:10px;align-items:center}
+.seat-detail-label{color:var(--muted);font-size:14px}
+.seat-detail-value{font-weight:600}
+.legend{display:flex;gap:30px;justify-content:center;margin-bottom:30px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:10px;font-size:14px}
+.legend-box{width:30px;height:30px;border-radius:6px}
+.legend-box.available{background:var(--seat)}
+.legend-box.sold{background:var(--sold)}
+.legend-box.selected{background:var(--accent)}
+
+.seat-grid-container{background:var(--card);padding:30px;border-radius:12px}
+.screen-label{text-align:center;margin-bottom:20px;color:var(--muted);font-size:14px}
+.seats{display:grid;grid-template-columns:repeat(12,1fr);gap:8px;margin-bottom:30px}
+.seat{height:40px;background:var(--seat);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:#999;border:2px solid transparent;transition:all 0.2s}
+.seat:hover:not(.sold){border-color:var(--accent);transform:scale(1.1)}
+.seat.sold{background:var(--sold);cursor:not-allowed;opacity:0.5}
+.seat.selected{background:var(--accent);color:#fff;border-color:#ff1f1f}
+
+.seats-footer{display:flex;gap:15px;justify-content:flex-end;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #1e293b}
+.selected-seats-info{color:var(--muted)}
+.selected-seats-info strong{color:#fff;font-weight:700}
+
+/* CHECKOUT SCREEN */
+.checkout-container{max-width:600px;margin:0 auto}
+.checkout-card{background:var(--card);padding:25px;border-radius:12px;margin-bottom:20px}
+.checkout-card h3{margin:0 0 15px 0;color:#e6eef6}
+.order-item{display:grid;grid-template-columns:1fr auto;gap:15px;padding:15px;background:#111827;border-radius:8px;margin-bottom:10px}
+.item-details{display:flex;flex-direction:column}
+.item-title{font-weight:600;margin-bottom:5px}
+.item-meta{color:var(--muted);font-size:14px}
+.item-price{font-weight:700;color:var(--accent);font-size:16px}
+.order-summary{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;padding-top:15px;border-top:1px solid #1e293b}
+.summary-label{color:var(--muted);font-size:14px}
+.summary-value{font-weight:700;font-size:20px;color:var(--accent)}
+
+.form-group{margin-bottom:15px}
+.form-group label{display:block;margin-bottom:8px;font-size:14px;color:var(--muted);font-weight:600}
+.form-group input{width:100%;padding:12px 15px;background:#111827;border:1px solid #1e293b;border-radius:8px;color:#fff;font-family:inherit}
+.form-group input:focus{outline:none;border-color:var(--accent);background:#0a0f1a}
+
+.payment-methods{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px}
+.payment-method{padding:15px;border:2px solid #1e293b;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.2s}
+.payment-method:hover{border-color:var(--accent)}
+.payment-method.selected{border-color:var(--accent);background:#ff3b3b22}
+
+.checkout-footer{display:flex;gap:15px;justify-content:space-between}
+.btn-large{padding:15px 30px;font-size:16px;width:100%}
+
+/* AUTH MODAL */
+.modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:1000}
+.modal.active{display:flex;animation:fadeIn 0.3s}
+.modal-content{background:#081426;padding:40px;border-radius:16px;width:90%;max-width:450px;box-shadow:0 20px 60px #0009}
+.modal-content h2{margin:0 0 25px 0;color:#e6eef6;text-align:center}
+.modal-tabs{display:flex;gap:20px;margin-bottom:30px;border-bottom:1px solid #1e293b}
+.modal-tab{padding:10px 0;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all 0.2s;font-weight:600}
+.modal-tab.active{color:var(--accent);border-color:var(--accent)}
+.modal-tab:hover{color:#fff}
+
+.form-group input{width:100%}
+.form-group{margin-bottom:20px}
+
+.modal-footer{display:flex;gap:10px;margin-top:25px}
+.modal-footer button{flex:1;padding:12px}
+
+.error-msg{color:#ff6b6b;font-size:13px;margin-top:5px;display:none}
+.error-msg.show{display:block}
+
+@media(max-width:768px){
+  .films-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .seat-info{grid-template-columns:1fr}
+  .checkout-container{width:100%}
+  main{padding:20px}
+  header{padding:15px 20px;flex-wrap:wrap;gap:15px}
+  .header-right{width:100%;flex-direction:column}
+}
+</style>
 </head>
 <body>
-  <h1>Ciao!</h1>
-  <p>Questo è il mio primo sito GitHub Pages.</p>
+
+<!-- HOME SCREEN -->
+<div class="app active" id="homeApp">
+  <header>
+    <div class="logo">🎬 Cinema Multisala</div>
+    <div class="header-right">
+      <input type="text" id="searchInput" placeholder="Cerca film...">
+      <div class="user-info" id="userInfo">Accedi per prenotare</div>
+      <button class="btn-ghost btn-sm" id="loginBtnHome">Login</button>
+      <button class="btn btn-sm" id="checkoutBtnHome">🛒 Carrello (<span id="cartCount">0</span>)</button>
+    </div>
+  </header>
+  <main>
+    <div class="search-section">
+      <h2>Film Disponibili</h2>
+      <div class="films-grid" id="filmsGrid"></div>
+    </div>
+  </main>
+</div>
+
+<!-- FILM DETAILS SCREEN (ORARI) -->
+<div class="app" id="filmDetailsApp">
+  <header>
+    <div class="logo">🎬 Cinema Multisala</div>
+    <div class="header-right">
+      <button class="back-btn" id="backFromDetails">← Indietro</button>
+      <button class="back-btn" id="homeFromDetails">🏠 Home</button>
+    </div>
+  </header>
+  <main>
+    <div style="max-width:600px;margin:0 auto">
+      <h2 id="filmDetailsTitle" style="margin-bottom:30px"></h2>
+      <div style="background:var(--card);padding:25px;border-radius:12px">
+        <h3 style="margin-top:0">Seleziona un orario:</h3>
+        <div id="timesList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- SEATS SCREEN -->
+<div class="app" id="seatsApp">
+  <header>
+    <div class="logo">🎬 Cinema Multisala</div>
+    <div class="header-right">
+      <button class="back-btn" id="backFromSeats">← Indietro</button>
+      <button class="back-btn" id="homeFromSeats">🏠 Home</button>
+    </div>
+  </header>
+  <main>
+    <div class="seats-header">
+      <h2 id="seatsTitle"></h2>
+    </div>
+    <div class="seat-info">
+      <div class="seat-detail">
+        <span class="seat-detail-label">Film:</span>
+        <span class="seat-detail-value" id="seatFilmName"></span>
+      </div>
+      <div class="seat-detail">
+        <span class="seat-detail-label">Orario:</span>
+        <span class="seat-detail-value" id="seatFilmTime"></span>
+      </div>
+      <div class="seat-detail">
+        <span class="seat-detail-label">Prezzo per posto:</span>
+        <span class="seat-detail-value" id="seatFilmPrice"></span>
+      </div>
+      <div class="seat-detail">
+        <span class="seat-detail-label">Totale:</span>
+        <span class="seat-detail-value" id="seatTotal">€ 0.00</span>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-box available"></div>
+        <span>Disponibile</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box sold"></div>
+        <span>Occupato</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box selected"></div>
+        <span>Selezionato</span>
+      </div>
+    </div>
+    <div class="seat-grid-container">
+      <div class="screen-label">SCHERMO</div>
+      <div class="seats" id="seatGrid"></div>
+      <div class="seats-footer">
+        <div class="selected-seats-info">Posti selezionati: <strong id="selectedCount">0</strong></div>
+        <button class="btn btn-sm" id="confirmSeatBtn" disabled>Procedi al Pagamento</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- CHECKOUT SCREEN -->
+<div class="app" id="checkoutApp">
+  <header>
+    <div class="logo">🎬 Cinema Multisala</div>
+    <div class="header-right">
+      <button class="back-btn" id="homeFromCheckout">🏠 Home</button>
+      <button class="back-btn" id="backFromCheckout">← Indietro</button>
+    </div>
+  </header>
+  <main>
+    <div class="checkout-container">
+      <div class="checkout-card">
+        <h3>Riepilogo Ordine</h3>
+        <div id="checkoutItems"></div>
+        <div class="order-summary">
+          <div class="summary-label">Importo Totale:</div>
+          <div class="summary-value" id="totalPrice">€ 0.00</div>
+        </div>
+      </div>
+
+      <div class="checkout-card">
+        <h3>Dati di Fatturazione</h3>
+        <div class="form-group">
+          <label>Nome Completo</label>
+          <input type="text" id="fullName" placeholder="Mario Rossi">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="emailCheckout" placeholder="mario@example.com">
+        </div>
+      </div>
+
+      <div class="checkout-card">
+        <h3>Metodo di Pagamento</h3>
+        <div class="payment-methods" id="paymentMethods">
+          <div class="payment-method selected" data-method="card">
+            <div style="font-size:24px">💳</div>
+            <div>Carta</div>
+          </div>
+          <div class="payment-method" data-method="paypal">
+            <div style="font-size:24px">🅿️</div>
+            <div>PayPal</div>
+          </div>
+          <div class="payment-method" data-method="apple">
+            <div style="font-size:24px">🍎</div>
+            <div>Apple Pay</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkout-card" id="cardDetails" style="display:block">
+        <h3>Dettagli Carta</h3>
+        <div class="form-group">
+          <label>Numero Carta</label>
+          <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+          <div class="form-group">
+            <label>Scadenza</label>
+            <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5">
+          </div>
+          <div class="form-group">
+            <label>CVV</label>
+            <input type="text" id="cardCVV" placeholder="123" maxlength="3">
+          </div>
+        </div>
+      </div>
+
+      <div class="checkout-footer">
+        <button class="btn btn-large" id="completePaymentBtn">Completa Acquisto</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- CONFIRMATION SCREEN (ADD TO CART) -->
+<div class="app" id="confirmAddApp">
+  <header>
+    <div class="logo">🎬 Cinema Multisala</div>
+  </header>
+  <main style="display:flex;align-items:center;justify-content:center">
+    <div style="text-align:center;max-width:500px;background:var(--card);padding:50px;border-radius:16px">
+      <div style="font-size:60px;margin-bottom:20px">✅</div>
+      <h2 style="margin:20px 0;color:#fff">Posti Aggiunti!</h2>
+      <p id="confirmAddMessage" style="color:var(--muted);font-size:16px;margin:20px 0"></p>
+      <div style="display:flex;gap:15px;margin-top:40px">
+        <button class="btn" style="flex:1;padding:12px" id="continueShoppingBtn">Continua Acquisti</button>
+        <button class="btn-ghost" style="flex:1;padding:12px" id="goCheckoutBtn">Vai al Carrello</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- CONFIRMATION SCREEN (PAYMENT SUCCESS) -->
+<div class="app" id="confirmPaymentApp">
+  <header>
+    <div class="logo">🎬 Cinema Multisala</div>
+  </header>
+  <main style="display:flex;align-items:center;justify-content:center">
+    <div style="text-align:center;max-width:500px;background:var(--card);padding:50px;border-radius:16px">
+      <div style="font-size:60px;margin-bottom:20px">🎉</div>
+      <h2 style="margin:20px 0;color:#fff">Acquisto Completato!</h2>
+      <p style="color:var(--muted);font-size:16px;margin:20px 0">Grazie per l'acquisto</p>
+      <div id="paymentConfirmDetails" style="background:#111827;padding:20px;border-radius:12px;margin:20px 0;text-align:left;color:var(--muted);font-size:14px">
+        <div style="margin-bottom:10px"><strong>Totale Pagamento:</strong> <span id="paymentConfirmTotal" style="color:#fff;float:right">€ 0.00</span></div>
+        <div style="margin-bottom:10px"><strong>Email:</strong> <span id="paymentConfirmEmail" style="color:#fff;float:right"></span></div>
+        <div><strong>Nome:</strong> <span id="paymentConfirmName" style="color:#fff;float:right"></span></div>
+      </div>
+      <p style="color:var(--muted);font-size:13px">Una conferma è stata inviata alla tua email</p>
+      <button class="btn" style="width:100%;padding:12px;margin-top:30px" id="backToHomePaymentBtn">Torna alla Home</button>
+    </div>
+  </main>
+</div>
+  <div class="modal-content">
+    <h2>Accedi al tuo Account</h2>
+    <div class="modal-tabs">
+      <div class="modal-tab active" data-tab="login">Login</div>
+      <div class="modal-tab" data-tab="register">Registrati</div>
+    </div>
+    
+    <div id="loginContent">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="mario@example.com">
+        <div class="error-msg" id="loginError"></div>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••">
+        <div class="error-msg" id="loginPassError"></div>
+      </div>
+      <button class="btn" style="width:100%;padding:12px" id="submitLogin">Accedi</button>
+    </div>
+
+    <div id="registerContent" style="display:none">
+      <div class="form-group">
+        <label>Nome Completo</label>
+        <input type="text" id="regName" placeholder="Mario Rossi">
+        <div class="error-msg" id="regNameError"></div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="mario@example.com">
+        <div class="error-msg" id="regEmailError"></div>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPass" placeholder="••••••••">
+        <div class="error-msg" id="regPassError"></div>
+      </div>
+      <div class="form-group">
+        <label>Conferma Password</label>
+        <input type="password" id="regPassConfirm" placeholder="••••••••">
+        <div class="error-msg" id="regConfirmError"></div>
+      </div>
+      <button class="btn" style="width:100%;padding:12px" id="submitRegister">Registrati</button>
+    </div>
+
+    <div style="text-align:center;margin-top:20px">
+      <button class="btn-ghost" style="width:100%;padding:12px" id="closeAuthModal">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const films=[
+  {id:1,title:'Fuga Spaziale',times:['16:00','19:00','22:10'],price:6.5},
+  {id:2,title:'Notte di Stelle',times:['15:30','18:00','21:00'],price:5.5},
+  {id:3,title:'Commedia Pazza',times:['14:00','17:00','20:30'],price:5},
+  {id:4,title:'Amore in Paradiso',times:['15:00','18:30','21:30'],price:6},
+  {id:5,title:'Azione Adrenalinica',times:['17:00','20:00','23:00'],price:7},
+  {id:6,title:'Horror Notturno',times:['21:00','23:30'],price:7.5}
+];
+
+let currentUser=sessionStorage.getItem('cinemaUser')?JSON.parse(sessionStorage.getItem('cinemaUser')):null;
+let cart=[];
+let selectedFilm=null;
+let selectedSeats=[];
+let selectedPayment='card';
+let seatOccupancy={};
+
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+
+// Navigation
+function showScreen(screenId){
+  $$('.app').forEach(app=>app.classList.remove('active'));
+  $(screenId).classList.add('active');
+}
+
+// HOME SCREEN
+function renderFilms(filter=''){
+  const filmsGrid=$('#filmsGrid');
+  filmsGrid.innerHTML='';
+  const filtered=films.filter(f=>f.title.toLowerCase().includes(filter.toLowerCase()));
+  filtered.forEach(f=>{
+    const card=document.createElement('div');
+    card.className='film-card';
+    card.onclick=()=>selectFilm(f.id);
+    card.innerHTML=`
+      <div class="film-poster" style="background-image:url(https://picsum.photos/seed/${f.id}/300/450)"></div>
+      <div class="film-info">
+        <div class="film-title">${f.title}</div>
+        <div class="film-price">€ ${f.price.toFixed(2)}/posto</div>
+        <div style="color:var(--muted);font-size:13px">${f.times.length} orari disponibili</div>
+      </div>
+    `;
+    filmsGrid.appendChild(card);
+  });
+}
+
+function selectFilm(filmId){
+  if(!currentUser){
+    openAuthModal();
+    return;
+  }
+  selectedFilm=films.find(f=>f.id==filmId);
+  renderFilmDetails();
+  showScreen('#filmDetailsApp');
+}
+
+function renderFilmDetails(){
+  $('#filmDetailsTitle').textContent=selectedFilm.title;
+  const timesList=$('#timesList');
+  timesList.innerHTML='';
+  selectedFilm.times.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.className='btn';
+    btn.style.padding='15px';
+    btn.textContent=t;
+    btn.onclick=()=>selectTime(t);
+    timesList.appendChild(btn);
+  });
+}
+
+function selectTime(time){
+  selectedFilm.time=time;
+  selectedSeats=[];
+  renderSeatScreen();
+  showScreen('#seatsApp');
+}
+
+// SEATS SCREEN
+function renderSeatScreen(){
+  $('#seatsTitle').textContent=`Scegli i tuoi posti - ${selectedFilm.title}`;
+  $('#seatFilmName').textContent=selectedFilm.title;
+  $('#seatFilmTime').textContent=selectedFilm.time;
+  $('#seatFilmPrice').textContent=`€ ${selectedFilm.price.toFixed(2)}`;
+  initializeSeats();
+  renderSeats();
+  updateSeatTotal();
+}
+
+function getSeatKey(){
+  return `${selectedFilm.id}-${selectedFilm.time}`;
+}
+
+function initializeSeats(){
+  const key=getSeatKey();
+  if(!seatOccupancy[key]){
+    seatOccupancy[key]=[];
+    for(let i=1;i<=84;i++){
+      if(Math.random()<0.15){
+        seatOccupancy[key].push(i);
+      }
+    }
+  }
+  // Aggiungi i posti dal carrello come occupati
+  cart.forEach(item=>{
+    if(item.id===selectedFilm.id&&item.time===selectedFilm.time){
+      item.seats.forEach(seat=>{
+        if(!seatOccupancy[key].includes(seat)){
+          seatOccupancy[key].push(seat);
+        }
+      });
+    }
+  });
+}
+
+function renderSeats(){
+  const key=getSeatKey();
+  const occupied=seatOccupancy[key]||[];
+  const seatGrid=$('#seatGrid');
+  seatGrid.innerHTML='';
+  for(let i=1;i<=84;i++){
+    const isSold=occupied.includes(i);
+    const seat=document.createElement('div');
+    seat.className='seat'+(isSold?' sold':'');
+    seat.textContent=i;
+    if(!isSold){
+      seat.onclick=()=>{
+        const idx=selectedSeats.indexOf(i);
+        if(idx>-1)selectedSeats.splice(idx,1);
+        else selectedSeats.push(i);
+        renderSeats();
+        updateSeatTotal();
+      };
+      if(selectedSeats.includes(i))seat.classList.add('selected');
+    }
+    seatGrid.appendChild(seat);
+  }
+}
+
+function updateSeatTotal(){
+  const total=(selectedSeats.length*selectedFilm.price).toFixed(2);
+  $('#seatTotal').textContent=`€ ${total}`;
+  $('#selectedCount').textContent=selectedSeats.length;
+  $('#confirmSeatBtn').disabled=selectedSeats.length===0;
+}
+
+// CHECKOUT SCREEN
+function renderCheckout(){
+  const checkoutItems=$('#checkoutItems');
+  checkoutItems.innerHTML='';
+  let totalPrice=0;
+  
+  cart.forEach(item=>{
+    const itemTotal=(item.seats.length*item.price).toFixed(2);
+    totalPrice+=parseFloat(itemTotal);
+    const plural=item.seats.length===1?'posto':'posti';
+    const itemDiv=document.createElement('div');
+    itemDiv.className='order-item';
+    itemDiv.innerHTML=`
+      <div class="item-details">
+        <div class="item-title">${item.title} - ${item.time}</div>
+        <div class="item-meta">Posti: ${item.seats.sort((a,b)=>a-b).join(', ')}</div>
+        <div class="item-meta">${item.seats.length} ${plural}</div>
+      </div>
+      <div class="item-price">€ ${itemTotal}</div>
+    `;
+    checkoutItems.appendChild(itemDiv);
+  });
+  
+  $('#totalPrice').textContent=`€ ${totalPrice.toFixed(2)}`;
+}
+
+// AUTH MODAL
+function openAuthModal(){
+  document.getElementById('authModal').classList.add('active');
+}
+
+function closeAuthModal(){
+  document.getElementById('authModal').classList.remove('active');
+  clearAuthForms();
+}
+
+function clearAuthForms(){
+  $$('.error-msg').forEach(e=>e.classList.remove('show'));
+  $('#loginEmail').value='';
+  $('#loginPass').value='';
+  $('#regName').value='';
+  $('#regEmail').value='';
+  $('#regPass').value='';
+  $('#regPassConfirm').value='';
+}
+
+function showError(inputId,message){
+  const errorId=inputId+'Error';
+  const error=$(('#'+errorId));
+  if(error){
+    error.textContent=message;
+    error.classList.add('show');
+  }
+}
+
+function validateEmail(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function performLogin(){
+  const email=$('#loginEmail').value.trim();
+  const pass=$('#loginPass').value;
+  
+  $$('.error-msg').forEach(e=>e.classList.remove('show'));
+  
+  let valid=true;
+  if(!email){
+    showError('loginEmail','Email obbligatoria');
+    valid=false;
+  }else if(!validateEmail(email)){
+    showError('loginEmail','Email non valida');
+    valid=false;
+  }
+  if(!pass){
+    showError('loginPass','Password obbligatoria');
+    valid=false;
+  }
+  
+  if(!valid)return;
+  
+  currentUser={email,name:'Utente'};
+  sessionStorage.setItem('cinemaUser',JSON.stringify(currentUser));
+  updateUserInfo();
+  closeAuthModal();
+}
+
+function performRegister(){
+  const name=$('#regName').value.trim();
+  const email=$('#regEmail').value.trim();
+  const pass=$('#regPass').value;
+  const passConfirm=$('#regPassConfirm').value;
+  
+  $$('.error-msg').forEach(e=>e.classList.remove('show'));
+  
+  let valid=true;
+  if(!name){
+    showError('regName','Nome obbligatorio');
+    valid=false;
+  }
+  if(!email){
+    showError('regEmail','Email obbligatoria');
+    valid=false;
+  }else if(!validateEmail(email)){
+    showError('regEmail','Email non valida');
+    valid=false;
+  }
+  if(!pass){
+    showError('regPass','Password obbligatoria');
+    valid=false;
+  }else if(pass.length<6){
+    showError('regPass','Password almeno 6 caratteri');
+    valid=false;
+  }
+  if(!passConfirm){
+    showError('regPassConfirm','Conferma password obbligatoria');
+    valid=false;
+  }else if(pass!==passConfirm){
+    showError('regPassConfirm','Password non corrispondono');
+    valid=false;
+  }
+  
+  if(!valid)return;
+  
+  currentUser={email,name};
+  sessionStorage.setItem('cinemaUser',JSON.stringify(currentUser));
+  updateUserInfo();
+  closeAuthModal();
+}
+
+function updateUserInfo(){
+  if(currentUser){
+    $('#userInfo').textContent=`Benvenuto, ${currentUser.name||'Utente'}`;
+    $('#loginBtnHome').style.display='none';
+  }else{
+    $('#userInfo').textContent='Accedi per prenotare';
+    $('#loginBtnHome').style.display='block';
+  }
+  updateCartCount();
+}
+
+function updateCartCount(){
+  const count=cart.length;
+  $('#cartCount').textContent=count;
+}
+
+// EVENTS
+$('#searchInput').addEventListener('input',e=>renderFilms(e.target.value));
+
+// LOGIN HOME
+document.getElementById('loginBtnHome').addEventListener('click',()=>{
+  $$('.modal-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('[data-tab="login"]').classList.add('active');
+  $('#loginContent').style.display='block';
+  $('#registerContent').style.display='none';
+  clearAuthForms();
+  openAuthModal();
+});
+
+// TAB SWITCHING
+$$('.modal-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    $$('.modal-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const tabName=tab.dataset.tab;
+    if(tabName==='login'){
+      $('#loginContent').style.display='block';
+      $('#registerContent').style.display='none';
+    }else{
+      $('#loginContent').style.display='none';
+      $('#registerContent').style.display='block';
+    }
+  });
+});
+
+// AUTH BUTTONS
+$('#submitLogin').addEventListener('click',performLogin);
+$('#submitRegister').addEventListener('click',performRegister);
+$('#closeAuthModal').addEventListener('click',closeAuthModal);
+
+// KEYBOARD ENTER
+document.getElementById('loginPass').addEventListener('keypress',e=>{
+  if(e.key==='Enter')performLogin();
+});
+document.getElementById('regPassConfirm').addEventListener('keypress',e=>{
+  if(e.key==='Enter')performRegister();
+});
+
+// NAVIGATION
+$('#backFromDetails').addEventListener('click',()=>showScreen('#homeApp'));
+$('#homeFromDetails').addEventListener('click',()=>showScreen('#homeApp'));
+
+$('#backFromSeats').addEventListener('click',()=>showScreen('#filmDetailsApp'));
+$('#homeFromSeats').addEventListener('click',()=>showScreen('#homeApp'));
+
+$('#confirmSeatBtn').addEventListener('click',()=>{
+  if(selectedSeats.length===0){
+    alert('Seleziona almeno un posto');
+    return;
+  }
+  cart.push({...selectedFilm,seats:[...selectedSeats]});
+  updateCartCount();
+  const plural=selectedSeats.length===1?'posto':'posti';
+  $('#confirmAddMessage').textContent=`${selectedSeats.length} ${plural} aggiunti al carrello!\n${selectedFilm.title} - ${selectedFilm.time}`;
+  showScreen('#confirmAddApp');
+});
+
+$('#checkoutBtnHome').addEventListener('click',()=>{
+  if(cart.length===0){
+    alert('Carrello vuoto');
+    return;
+  }
+  renderCheckout();
+  showScreen('#checkoutApp');
+});
+
+$('#backFromCheckout').addEventListener('click',()=>showScreen('#homeApp'));
+$('#homeFromCheckout').addEventListener('click',()=>showScreen('#homeApp'));
+
+// CONFIRMATION SCREENS
+$('#continueShoppingBtn').addEventListener('click',()=>showScreen('#homeApp'));
+$('#goCheckoutBtn').addEventListener('click',()=>{
+  renderCheckout();
+  showScreen('#checkoutApp');
+});
+
+$('#backToHomePaymentBtn').addEventListener('click',()=>{
+  cart=[];
+  updateCartCount();
+  $('#fullName').value='';
+  $('#emailCheckout').value='';
+  $('#cardNumber').value='';
+  $('#cardExpiry').value='';
+  $('#cardCVV').value='';
+  showScreen('#homeApp');
+});
+
+$$('.payment-method').forEach(method=>{
+  method.addEventListener('click',()=>{
+    $$('.payment-method').forEach(m=>m.classList.remove('selected'));
+    method.classList.add('selected');
+    selectedPayment=method.dataset.method;
+    const cardDetails=$('#cardDetails');
+    if(selectedPayment==='card'){
+      cardDetails.style.display='block';
+    }else{
+      cardDetails.style.display='none';
+    }
+  });
+});
+
+$('#completePaymentBtn').addEventListener('click',()=>{
+  const name=$('#fullName').value.trim();
+  const email=$('#emailCheckout').value.trim();
+  
+  if(!name){alert('Inserisci il nome');return}
+  if(!email){alert('Inserisci l\'email');return}
+  
+  if(selectedPayment==='card'){
+    const cardNum=$('#cardNumber').value.replace(/\s/g,'');
+    const expiry=$('#cardExpiry').value;
+    const cvv=$('#cardCVV').value;
+    
+    if(!cardNum||cardNum.length!==16){alert('Numero carta non valido');return}
+    if(!expiry||!expiry.match(/^\d{2}\/\d{2}$/)){alert('Scadenza non valida (MM/YY)');return}
+    if(!cvv||cvv.length!==3){alert('CVV non valido');return}
+  }
+  
+  const totalPrice=$('#totalPrice').textContent.replace('€ ','');
+  $('#paymentConfirmTotal').textContent=`€ ${totalPrice}`;
+  $('#paymentConfirmEmail').textContent=email;
+  $('#paymentConfirmName').textContent=name;
+  
+  showScreen('#confirmPaymentApp');
+});
+
+// INIT
+renderFilms();
+updateUserInfo();
+</script>
 </body>
 </html>
