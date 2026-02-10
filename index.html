@@ -348,6 +348,25 @@ main{flex:1;overflow-y:auto;padding:40px}
     </div>
   </main>
 </div>
+
+<!-- EMPTY CART SCREEN -->
+<div class="app" id="emptyCartApp">
+  <header>
+    <div class="logo">🎬 Cinema Multisala</div>
+  </header>
+  <main style="display:flex;align-items:center;justify-content:center">
+    <div style="text-align:center;max-width:500px;background:var(--card);padding:50px;border-radius:16px">
+      <div style="font-size:60px;margin-bottom:20px">🛒</div>
+      <h2 style="margin:20px 0;color:#fff">Carrello Vuoto</h2>
+      <p style="color:var(--muted);font-size:16px;margin:20px 0">Non hai ancora aggiunto nessun biglietto al carrello.</p>
+      <p style="color:var(--muted);font-size:14px">Seleziona un film e scegli i tuoi posti preferiti!</p>
+      <button class="btn" style="width:100%;padding:12px;margin-top:30px" id="backToHomeEmptyBtn">Torna alla Home</button>
+    </div>
+  </main>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal" id="authModal">
   <div class="modal-content">
     <h2>Accedi al tuo Account</h2>
     <div class="modal-tabs">
@@ -593,7 +612,7 @@ function clearAuthForms(){
 
 function showError(inputId,message){
   const errorId=inputId+'Error';
-  const error=$(('#'+errorId));
+  const error=$('#'+errorId);
   if(error){
     error.textContent=message;
     error.classList.add('show');
@@ -753,7 +772,7 @@ $('#confirmSeatBtn').addEventListener('click',()=>{
 
 $('#checkoutBtnHome').addEventListener('click',()=>{
   if(cart.length===0){
-    alert('Carrello vuoto');
+    showScreen('#emptyCartApp');
     return;
   }
   renderCheckout();
@@ -762,6 +781,9 @@ $('#checkoutBtnHome').addEventListener('click',()=>{
 
 $('#backFromCheckout').addEventListener('click',()=>showScreen('#homeApp'));
 $('#homeFromCheckout').addEventListener('click',()=>showScreen('#homeApp'));
+
+// EMPTY CART
+$('#backToHomeEmptyBtn').addEventListener('click',()=>showScreen('#homeApp'));
 
 // CONFIRMATION SCREENS
 $('#continueShoppingBtn').addEventListener('click',()=>showScreen('#homeApp'));
